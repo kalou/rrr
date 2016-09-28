@@ -7,8 +7,9 @@ from setuptools import setup, find_packages
 requires = [
     'flask',
     'requests',
-    'dnsknife',
-    'pyyaml'
+    'dnsknife>=0.10',
+    'pyyaml',
+    'pysocks'
 ]
 
 setup(

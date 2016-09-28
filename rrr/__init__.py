@@ -12,7 +12,7 @@ from . import config
 app = Flask(__name__)
 
 config.load('/etc/gandi/rrr.yaml')
-socks = config.get('socks_proxy')
+socks = config.get('socks5_proxy')
 if socks:
     dnsknife.set_socks5_server(socks)
 
