@@ -1,0 +1,6 @@
+# Required until debian generates metadata-1.1 or 1.2 egg_info
+dnsknife python-dnsknife
+ecdsa python-ecdsa # should be in dnsknife but ensure we have it
+flask python-flask
+yaml python-yaml
+requests python-requests

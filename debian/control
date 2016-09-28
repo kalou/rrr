@@ -1,0 +1,15 @@
+Source: python-rrr
+Priority: optional
+Section: python
+Maintainer: Pascal Bouchareine <pascal@gandi.net>
+Build-Depends: debhelper (>= 8),
+ python (>= 2.7)
+Build-Depends-Indep: python-setuptools
+Standards-Version: 3.9.3
+X-Python-Version: >= 2.7
+
+Package: python-rrr
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: Implementation of regext dnsop to RRR
+    https://tools.ietf.org/html/draft-ietf-regext-dnsoperator-to-rrr-protocol-00
