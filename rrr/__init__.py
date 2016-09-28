@@ -1,6 +1,7 @@
 import os
 import json
 
+
 from flask import Flask, redirect, Response
 import dnsknife
 
@@ -9,6 +10,11 @@ from . import registrar
 from . import config
 
 app = Flask(__name__)
+
+config.load('/etc/gandi/rrr.yaml')
+socks = config.get('socks_proxy')
+if socks:
+    dnsknife.set_socks5_server(socks)
 
 reg = registrar.Registrar()
 

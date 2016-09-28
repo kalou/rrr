@@ -2,8 +2,10 @@ import yaml
 
 CONF = {
     'challenge_secret': 'fieyoo7ajohche8ahhiequ4ohXue6tuu',
-    'registrar_backend': '/some/endpoint',
-    'registrar_secret': '/some/endpoint',
+    'api': {
+        'url': 'http://localhost:8083/',
+        'key': 'somekey'
+    },
 }
 
 def load(filename):
@@ -12,8 +14,8 @@ def load(filename):
         if conf:
             CONF.update(conf)
 
-def get(key):
+def get(key, default=''):
     d = CONF
     for k in key.split('.'):
         d = d.get(k, {})
-    return d
+    return d or default
