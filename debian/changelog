@@ -1,3 +1,9 @@
+python-rrr (0.0.2) unstable; urgency=medium
+
+  * Add basic gandi API and a ping method
+
+ -- Pascal Bouchareine <pascal@gandi.net>  Thu, 29 Sep 2016 16:10:13 -0700
+
 python-rrr (0.0.1) unstable; urgency=medium
 
   * Initial release.

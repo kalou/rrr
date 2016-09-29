@@ -53,6 +53,11 @@ def apply_dnskey(domain, dnssec=False):
         return JR({'status': str(e)}, 500)
 
 
+@app.route("/ping")
+def ping():
+    return Response("pong")
+
+
 @app.route("/domains/<domain>/cds", methods=['POST'])
 def new_dnskeys(domain):
     r = check_domain(domain) or check_challenge(domain)
