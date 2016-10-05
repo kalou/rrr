@@ -84,7 +84,7 @@ def set_dnskeys(domain):
     return JR({'status': 'success', 'rel': ret})
 
 @app.route("/domains/<domain>/tokens", methods=['POST'])
-def set_token(domain):
+def new_token(domain):
     r = check_domain(domain)
     if r:
         return r
@@ -92,4 +92,4 @@ def set_token(domain):
     secret = config.get('challenge_secret')
     challenge = dnsknife.Checker(domain).challenge(secret)
 
-    return Response('@ IN TXT "{}"'.format(challenge), status=201)
+    return Response('@ IN TXT "{}"'.format(challenge), status=200)
