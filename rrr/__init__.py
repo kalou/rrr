@@ -45,7 +45,8 @@ def apply_dnskey(domain, dnssec=False):
         op = reg.set_keys(domain, [])
         return op
     except (dnsknife.exceptions.BadCDNSKEY,
-            dnsknife.exceptions.NoTrust), e:
+            dnsknife.exceptions.NoTrust,
+            dnsknife.exceptions.NoAnswer), e:
         print e.__class__
         return JR({'status': str(e)}, 400)
     except Exception, e:
