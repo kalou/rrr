@@ -26,8 +26,10 @@ class Registrar:
         """dnskeys is a list of keys - set_keys atomically
         replaces the domain's keys with the provided set.
         Eventually returning an operation reference"""
+        def pubkey(k):
+            return ''.join(k.to_text().split(' ')[3:])
         api_keys = [{'algorithm': k.algorithm,
-                     'public_key': k.to_text(), 'flags': k.flags}
+                     'public_key': pubkey(k), 'flags': k.flags}
                     for k in dnskeys]
         op = self.rpc.domain.dnssec.set(self.key, domain, api_keys)
         return op['id']

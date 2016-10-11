@@ -14,7 +14,7 @@ requires = [
 
 setup(
     name="rrr",
-    version='0.0.1',
+    version='0.0.3',
     packages=find_packages(),
     description="an implementation of draft-ietf-regext-dnsoperator-to-rrr-protocol-01",
     install_requires=requires,

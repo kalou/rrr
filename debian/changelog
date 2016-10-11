@@ -1,3 +1,9 @@
+python-rrr (0.0.3) unstable; urgency=medium
+
+  * Fix pubkey upload method
+
+ -- Pascal Bouchareine <pascal@gandi.net>  Tue, 11 Oct 2016 14:18:39 -0700
+
 python-rrr (0.0.2) unstable; urgency=medium
 
   * Add basic gandi API and a ping method
