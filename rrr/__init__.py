@@ -1,8 +1,9 @@
-import os
 import json
+import os
+import string
 
 
-from flask import Flask, redirect, Response
+from flask import Flask, redirect, request, Response
 import dnsknife
 
 
@@ -23,6 +24,20 @@ def JR(w, status=200):
     return Response(json.dumps(w), status=status,
                     mimetype="application/json")
 
+def check_auth(user, password):
+    for u, p in config.get('post_credentials', {}).items():
+        if u == user and p == password:
+            return True
+    return False
+
+def requires_auth(f):
+    def decorate(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return Response('Please authenticate', 401,
+                            {'WWW-Authenticate': 'Basic realm="initial"'})
+        return f(*args, **kwargs)
+    return decorate
 
 def check_domain(domain):
     if not reg.has_domain(domain):
@@ -60,6 +75,7 @@ def ping():
 
 
 @app.route("/domains/<domain>/cds", methods=['POST'])
+@requires_auth
 def new_dnskeys(domain):
     r = check_domain(domain) or check_challenge(domain)
     if r:

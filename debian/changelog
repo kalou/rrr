@@ -1,3 +1,9 @@
+python-rrr (0.0.4) unstable; urgency=medium
+
+  * Add auth for initial setup
+
+ -- Pascal Bouchareine <pascal@gandi.net>  Wed, 19 Oct 2016 19:49:32 -0700
+
 python-rrr (0.0.3) unstable; urgency=medium
 
   * Fix pubkey upload method
