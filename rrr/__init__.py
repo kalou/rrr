@@ -53,7 +53,7 @@ def check_challenge(domain):
 def apply_dnskey(domain, dnssec=False):
     c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
     try:
-        new_keys = c.cdnskey()
+        new_keys = set(c.cdnskey())
         op = reg.set_keys(domain, new_keys)
         return op
     except dnsknife.exceptions.DeleteDS:
