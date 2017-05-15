@@ -99,7 +99,7 @@ def set_dnskeys(domain):
 
     return JR({'status': 'success', 'rel': ret})
 
-@app.route("/domains/<domain>/tokens", methods=['POST'])
+@app.route("/domains/<domain>/tokens", methods=['GET', 'POST'])
 def new_token(domain):
     r = check_domain(domain)
     if r:
