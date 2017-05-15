@@ -47,8 +47,8 @@ def check_challenge(domain):
     c = dnsknife.Checker(domain, direct=True)
     secret = config.get('challenge_secret')
 
-    if not c.has_challenge(secret):
-        return JR({'challenge': c.challenge(secret)}, 403)
+    if not c.has_challenge(secret, name="_delegate"):
+        return JR({'challenge': c.challenge(secret), }, 403
 
 def apply_dnskey(domain, dnssec=False):
     c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
@@ -99,7 +99,7 @@ def set_dnskeys(domain):
 
     return JR({'status': 'success', 'rel': ret})
 
-@app.route("/domains/<domain>/tokens", methods=['POST'])
+@app.route("/domains/<domain>/tokens", methods=['GET', 'POST'])
 def new_token(domain):
     r = check_domain(domain)
     if r:
@@ -108,4 +108,4 @@ def new_token(domain):
     secret = config.get('challenge_secret')
     challenge = dnsknife.Checker(domain).challenge(secret)
 
-    return Response('@ IN TXT "{}"'.format(challenge), status=200)
+    return Response('_delegate IN TXT "{}"'.format(challenge), status=200)
