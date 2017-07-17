@@ -48,7 +48,7 @@ def check_challenge(domain):
     secret = config.get('challenge_secret')
 
     if not c.has_challenge(secret, name="_delegate"):
-        return JR({'challenge': c.challenge(secret), }, 403
+        return JR({'challenge': c.challenge(secret)}, 403)
 
 def apply_dnskey(domain, dnssec=False):
     c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
