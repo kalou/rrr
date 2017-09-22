@@ -1,3 +1,9 @@
+python-rrr (0.0.7) unstable; urgency=low
+
+  * RRR 03
+
+ -- Pascal Bouchareine <pascal@gandi.net>  Thu, 21 Sep 2017 17:11:40 +0200
+
 python-rrr (0.0.5) unstable; urgency=medium
 
   * Fix case where multiple CDS are published for the same key
