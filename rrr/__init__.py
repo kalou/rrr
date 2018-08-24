@@ -19,54 +19,70 @@ if socks:
 
 reg = registrar.Registrar()
 
+class AppException(Exception):
+    code=500
+    def __init__(self, e):
+        self.message = {'status': '%s occurred' % str(e)}
+
+
+class CDSException(AppException):
+    code=400
+
+
+class DomainNotFound(AppException):
+    message={'status': 'domain not found'}
+    def __init__(self, domain):
+        message={'status': 'domain %s not found' % domain}
+    code=404
+
+
+class Challenge(AppException):
+    code=401
+    def __init__(self, challenge):
+        self.message = {'challenge': challenge}
 
 def JR(w, status=200):
     return Response(json.dumps(w), status=status,
-                    mimetype="application/json")
+            mimetype='application/json')
 
-def check_auth(user, password):
+@app.errorhandler(AppException)
+def appException(exc):
+    return JR(exc.message, exc.code)
+
+def check_creds(user, password):
     for u, p in config.get('post_credentials', {}).items():
         if u == user and p == password:
             return True
     return False
 
-def requires_auth(f):
-    def decorate(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return Response('Please authenticate', 401,
-                            {'WWW-Authenticate': 'Basic realm="initial"'})
-        return f(*args, **kwargs)
-    return decorate
+def check_auth():
+    auth = request.authorization
+    if not auth or not check_creds(auth.username, auth.password):
+        return Response('Please authenticate', 401,
+                        {'WWW-Authenticate': 'Basic realm="initial"'})
 
 def check_domain(domain):
     if not reg.has_domain(domain):
-        return JR({'status': 'domain_not_found'}, 404)
+        raise DomainNotFound(domain)
 
 def check_challenge(domain):
     c = dnsknife.Checker(domain, direct=True)
     secret = config.get('challenge_secret')
 
     if not c.has_challenge(secret, name="_delegate"):
-        return JR({'challenge': c.challenge(secret)}, 403)
+        raise Challenge(c.challenge(secret))
 
-def apply_dnskey(domain, dnssec=False):
+def get_dnskeys(domain, dnssec=True):
     c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
     try:
-        new_keys = set(c.cdnskey())
-        op = reg.set_keys(domain, new_keys)
-        return op
+        return set(c.cdnskey())
     except dnsknife.exceptions.DeleteDS:
-        op = reg.set_keys(domain, [])
-        return op
+        return []
     except (dnsknife.exceptions.BadCDNSKEY,
             dnsknife.exceptions.NoTrust,
-            dnsknife.exceptions.NoAnswer), e:
-        print e.__class__
-        return JR({'status': str(e)}, 400)
-    except Exception, e:
-        print e.__class__
-        return JR({'status': str(e)}, 500)
+            dnsknife.exceptions.NoAnswer,
+            dnsknife.exceptions.NoDNSSEC), e:
+        raise CDSException(e)
 
 
 @app.route("/ping")
@@ -74,28 +90,29 @@ def ping():
     return Response("pong")
 
 
-@app.route("/domains/<domain>/cds", methods=['POST'])
-@requires_auth
-def new_dnskeys(domain):
-    r = check_domain(domain) or check_challenge(domain)
-    if r:
-        return r
+def key_ids(list_of_keys):
+    return [dnsknife.dnssec.key_id(x) for x in list_of_keys]
 
-    ret = apply_dnskey(domain)
-    if isinstance(ret, Response):
-        return ret
+@app.route("/domains/<domain>/cds", methods=['GET'])
+def check_dnskeys(domain):
+    check_domain(domain)
+    initial = get_dnskeys(domain, False)
+    secure = get_dnskeys(domain)
+    return JR({'secure_cds': key_ids(secure),
+               'initial_cds': key_ids(initial)})
 
-    return JR({'status': 'success', 'rel': ret}, 201)
-
-@app.route("/domains/<domain>/cds", methods=['DELETE', 'PUT'])
+@app.route("/domains/<domain>/cds", methods=['POST', 'DELETE', 'PUT'])
 def set_dnskeys(domain):
-    r = check_domain(domain)
-    if r:
-        return r
+    check_domain(domain)
 
-    ret = apply_dnskey(domain, dnssec=True)
-    if isinstance(ret, Response):
-        return ret
+    if request.method == 'POST':
+        check_auth()
+        check_challenge(domain)
+        keys = get_dnskeys(domain, False)
+    else:
+        keys = get_dnskeys(domain)
+
+    ret = reg.set_keys(domain, keys)
 
     return JR({'status': 'success', 'rel': ret})
 
