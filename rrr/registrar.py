@@ -1,4 +1,7 @@
-import xmlrpclib
+try:
+    from xmlrpc.client import Server, Fault
+except ImportError:
+    from xmlrcplib import Server, Fault
 
 from . import config
 
@@ -7,7 +10,7 @@ from . import config
 class Registrar:
     """Base class for a fake registrar"""
     def __init__(self):
-        self.rpc = xmlrpclib.Server(config.get('api.url'), allow_none=True)
+        self.rpc = client.Server(config.get('api.url'), allow_none=True)
         self.key = config.get('api.key')
 
     def has_domain(self, domain):
@@ -16,11 +19,13 @@ class Registrar:
         try:
             self.rpc.domain.dnssec.list(self.key, domain)
             return True
-        except xmlrpclib.Fault, f:
+        except Fault as f:
             if f.faultCode == 510050: # OBJECT_DOMAIN/CAUSE_NORIGHT
                 return True
-        except Exception, e:
-            print 'EXC %s' % e
+            else:
+                print('XmlRpc exception %s' % f)
+        except Exception as e:
+            print('EXC %s' % e)
 
     def set_keys(self, domain, dnskeys):
         """dnskeys is a list of keys - set_keys atomically

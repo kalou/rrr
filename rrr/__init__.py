@@ -25,10 +25,6 @@ class AppException(Exception):
         self.message = {'status': '%s occurred' % str(e)}
 
 
-class CDSException(AppException):
-    code=400
-
-
 class DomainNotFound(AppException):
     message={'status': 'domain not found'}
     def __init__(self, domain):
@@ -42,12 +38,18 @@ class Challenge(AppException):
         self.message = {'challenge': challenge}
 
 def JR(w, status=200):
+    def stringify(value):
+        if isinstance(value, list):
+            return [str(v) for v in value]
+        return str(value)
+
+    w = dict((k, stringify(v)) for k,v in w.items())
     return Response(json.dumps(w), status=status,
             mimetype='application/json')
 
 @app.errorhandler(AppException)
 def appException(exc):
-    return JR(exc.message, exc.code)
+    return JR({'status': 'error', 'text': exc.message}, exc.code)
 
 def check_creds(user, password):
     for u, p in config.get('post_credentials', {}).items():
@@ -72,18 +74,6 @@ def check_challenge(domain):
     if not c.has_challenge(secret, name="_delegate"):
         raise Challenge(c.challenge(secret))
 
-def get_dnskeys(domain, dnssec=True):
-    c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
-    try:
-        return set(c.cdnskey())
-    except dnsknife.exceptions.DeleteDS:
-        return []
-    except (dnsknife.exceptions.BadCDNSKEY,
-            dnsknife.exceptions.NoTrust,
-            dnsknife.exceptions.NoAnswer,
-            dnsknife.exceptions.NoDNSSEC), e:
-        raise CDSException(e)
-
 
 @app.route("/ping")
 def ping():
@@ -93,26 +83,59 @@ def ping():
 def key_ids(list_of_keys):
     return [dnsknife.dnssec.key_id(x) for x in list_of_keys]
 
+def _check_dnskeys(domain):
+    check_domain(domain)
+    c = dnsknife.Checker(domain, direct=True)
+
+    errors = []
+
+    try:
+        cds = list(set(c.with_query_strategy(
+            dnsknife.QueryStrategyAll).cdnskey()))
+    #except dnsknife.exceptions.DeleteDS:
+    # We shall see later what to do
+    #    return ['DELETE']
+    except dnsknife.exceptions.Error as e:
+        cds = []
+        errors.append(str(e))
+
+    try:
+        keys = list(set(c.DNSKEY()))
+    except (dnsknife.exceptions.Error, dnsknife.exceptions.NoAnswer) as e:
+        keys = []
+        errors.append(str(e))
+
+    try:
+        parent_ds = list(set(c.at_parent().DS()))
+    except (dnsknife.exceptions.Error, dnsknife.exceptions.NoAnswer) as e:
+        parent_ds = []
+        errors.append(str(e))
+
+    return {'parent': parent_ds, # what DS are at the parent
+               'child': keys,
+               'cds': cds,
+               'errors': errors}
+
 @app.route("/domains/<domain>/cds", methods=['GET'])
 def check_dnskeys(domain):
-    check_domain(domain)
-    initial = get_dnskeys(domain, False)
-    secure = get_dnskeys(domain)
-    return JR({'secure_cds': key_ids(secure),
-               'initial_cds': key_ids(initial)})
+    return JR(_check_dnskeys(domain))
 
 @app.route("/domains/<domain>/cds", methods=['POST', 'DELETE', 'PUT'])
 def set_dnskeys(domain):
-    check_domain(domain)
+    try:
+        data = _check_dnskeys(domain)
+    except dnsknife.exceptions.DeleteDS:
+        if request.method == 'DELETE':
+            return JR({'status': 'deleted', 'rel': reg.set_keys(domain, [])})
 
     if request.method == 'POST':
-        check_auth()
-        check_challenge(domain)
-        keys = get_dnskeys(domain, False)
+        keys = data['cds'] or data['child']
     else:
-        keys = get_dnskeys(domain)
+        keys = data['cds']
 
-    ret = reg.set_keys(domain, keys)
+    ret = 'noaction'
+    if keys:
+        ret = reg.set_keys(domain, keys)
 
     return JR({'status': 'success', 'rel': ret})
 
