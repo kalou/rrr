@@ -72,8 +72,8 @@ def check_challenge(domain):
     if not c.has_challenge(secret, name="_delegate"):
         raise Challenge(c.challenge(secret))
 
-def get_dnskeys(domain, dnssec=True):
-    c = dnsknife.Checker(domain, direct=True, dnssec=dnssec)
+def get_cds(domain):
+    c = dnsknife.Checker(domain, direct=True)
     try:
         return set(c.cdnskey())
     except dnsknife.exceptions.DeleteDS:
@@ -96,10 +96,12 @@ def key_ids(list_of_keys):
 @app.route("/domains/<domain>/cds", methods=['GET'])
 def check_dnskeys(domain):
     check_domain(domain)
-    initial = get_dnskeys(domain, False)
-    secure = get_dnskeys(domain)
-    return JR({'secure_cds': key_ids(secure),
-               'initial_cds': key_ids(initial)})
+    cds = get_cds(domain)
+    keys = dnsknife.Checker(domain).DNSKEY(text=True)
+
+    return JR({'parent': [], # what DS are at the parent
+               'child': keys,
+               'cds': cds})
 
 @app.route("/domains/<domain>/cds", methods=['POST', 'DELETE', 'PUT'])
 def set_dnskeys(domain):

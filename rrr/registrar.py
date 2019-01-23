@@ -19,8 +19,10 @@ class Registrar:
         except xmlrpclib.Fault, f:
             if f.faultCode == 510050: # OBJECT_DOMAIN/CAUSE_NORIGHT
                 return True
+            else:
+                print('XmlRpc exception %s' % f)
         except Exception, e:
-            print 'EXC %s' % e
+            print('EXC %s' % e)
 
     def set_keys(self, domain, dnskeys):
         """dnskeys is a list of keys - set_keys atomically
