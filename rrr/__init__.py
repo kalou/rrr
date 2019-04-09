@@ -95,7 +95,7 @@ def _check_dnskeys(domain):
     #except dnsknife.exceptions.DeleteDS:
     # We shall see later what to do
     #    return ['DELETE']
-    except dnsknife.exceptions.Error as e:
+    except (dnsknife.exceptions.Error, dnsknife.exceptions.NoAnswer) as e:
         cds = []
         errors.append(str(e))
 
