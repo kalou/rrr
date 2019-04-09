@@ -1,7 +1,7 @@
 try:
     from xmlrpc.client import Server, Fault
 except ImportError:
-    from xmlrcplib import Server, Fault
+    from xmlrpclib import Server, Fault
 
 from . import config
 
@@ -10,7 +10,7 @@ from . import config
 class Registrar:
     """Base class for a fake registrar"""
     def __init__(self):
-        self.rpc = client.Server(config.get('api.url'), allow_none=True)
+        self.rpc = Server(config.get('api.url'), allow_none=True)
         self.key = config.get('api.key')
 
     def has_domain(self, domain):
