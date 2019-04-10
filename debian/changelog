@@ -1,3 +1,9 @@
+python-rrr (0.0.10) unstable; urgency=low
+
+  * Internal build (fixing JSON serialization issue)
+
+ -- Pascal Bouchareine <pascal@gandi.net>  Wed, 10 Apr 2019 10:42:26 +0200
+
 python-rrr (0.0.9) unstable; urgency=low
 
   * GET keys
